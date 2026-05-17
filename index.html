@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EEW(警報)ビューアーv0.0.0</title>
+<title>EEW(警報)ビューアーv0.0.1</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -214,14 +214,14 @@ async function updateEEW() {
   if (running) return;
   running = true;
   try {
-    const res = await fetch("https://api.wolfx.jp/jma_eew.json");
-    //const res = await fetch("https://script.google.com/macros/s/AKfycbzgP8R7vowRFrefHbUIkAcGt4NFjJZcuVnnpVqIjpprlCA44PtTk7ffHs-f4HP8Yk8A/exec");
+    //const res = await fetch("https://api.wolfx.jp/jma_eew.json");
+    const res = await fetch("https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
 
     let eewMessage = "";
 
-    if (data.isTraining) {
+    if (data.test) {
       outputEl.textContent = "訓練報のため処理終了";
       const now = new Date();
       const y = now.getFullYear();
