@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EEW(警報)ビューアーv0.0.1</title>
+<title>[v0.0.2]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -233,25 +233,12 @@ async function updateEEW() {
       statusEl.textContent = `最終更新: ${y}/${m}/${d} ${h}:${min}:${s}`;
       return;
     }
-
-    let maxInt = data.MaxIntensity;
-    const isWarn = data.isWarn;
-    let coloredTitle = data.Title;
-
-    if (["1","2"].includes(maxInt)) {
-      coloredTitle = isWarn ? `🟥${data.Title}🟥` : `🟦${data.Title}🟦`;
-    } else if (["3","4"].includes(maxInt)) {
-      coloredTitle = isWarn ? `🟥${data.Title}🟥` : `🟨${data.Title}🟨`;
-    } else if (["5-","5+","5弱","5強"].includes(maxInt)) {
-      coloredTitle = isWarn ? `🟥${data.Title}🟥` : `🟧${data.Title}🟧`;
-    } else if (["6-","6弱","6+","6強","7"].includes(maxInt)) {
-      coloredTitle = isWarn ? `🟪${data.Title}🟪` : `🟧${data.Title}🟧`;
+    
+    if (data.isCancel) {
+      eewMessage += "【緊急地震速報（取消）】";
     } else {
-      coloredTitle = `《${data.Title}》`;
-      maxInt = "不明";
-      if (data.Depth > 150) maxInt = "推定なし（深発）";
+      eewMessage += "【緊急地震速報（気象庁）】"
     }
-    if (data.isCancel) coloredTitle = "《緊急地震速報（取消）》";
     eewMessage += coloredTitle;
 
     let alertHeader = "";
