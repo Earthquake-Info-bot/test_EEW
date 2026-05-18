@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.13]EEW(警報)ビューアー</title>
+<title>[v0.0.15]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -259,6 +259,20 @@ async function updateEEW() {
       eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
     } else {
       eewMessage += `【緊急地震速報（第${serial}報）】`;
+      eewMessage += `落ち着いて身の安全を確保\n\n＜強い揺れが予想される地域＞\n`;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     } 
 
     outputEl.textContent = eewMessage;
@@ -289,6 +303,14 @@ copyBtn.addEventListener("click", () => {
   }).catch(err => {
     alert("コピーに失敗しました: " + err);
   });
+});
+document.addEventListener("keydown", (e) => {
+  if (e.target.closest("textarea, input, select")) return;
+
+  if (e.key === "Enter") {
+    e.preventDefault();
+    copyBtn.click(); // ←これだけでOK
+  }
 });
 </script>
 </body>
