@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.12]EEW(警報)ビューアー</title>
+<title>[v0.0.13]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -237,16 +237,6 @@ function nowTimeFormat() {
   const format = `${y}/${m}/${d} ${h}:${min}:${s}`;
   return format;
 }
-
-function announceTimeFormat(time) {
-  if (!time) return "----/--/-- --:--:--";
-  const str = String(time); // ←これ絶対必要
-  const [datePart, timePart] = str.split(" ");
-  if (!datePart || !timePart) return "----/--/-- --:--:--";
-  const [y, m, d] = datePart.split("/");
-  const [h, min, s] = timePart.split(":");
-  return `${y}/${m}/${d} ${h}:${min}:${s}`;
-}
   
 let running = false;
 async function updateEEW() {
@@ -274,7 +264,7 @@ async function updateEEW() {
     outputEl.textContent = eewMessage;
 
     const now = nowTimeFormat();
-    const announceTime = announceTimeFormat(new Date(data[0].time));
+    const announceTime = data[0].time;
     
     statusEl.textContent = `最終更新: ${now}\n発表時刻: ${announceTime}`;
     
