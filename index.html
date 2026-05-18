@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.4]EEW(警報)ビューアー</title>
+<title>[v0.0.7]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -225,6 +225,31 @@ function sortByAreaOrder(a, b) {
   const ib = areaOrderIndex.has(b) ? areaOrderIndex.get(b) : Infinity;
   return ia - ib;
 }
+
+function nowTimeFormat() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth()+1).padStart(2,'0');
+  const d = String(now.getDate()).padStart(2,'0');
+  const h = String(now.getHours()).padStart(2,'0');
+  const min = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  const format = `${y}/${m}/${d} ${h}:${min}:${s}`;
+  return format;
+}
+
+function announceTimeFormat(time) {
+  if (!time) return "----/--/-- --:--:--";
+  const d = new Date(time);
+  if (isNaN(d.getTime())) return "----/--/-- --:--:--";
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  const h = String(d.getHours()).padStart(2,'0');
+  const min = String(d.getMinutes()).padStart(2,'0');
+  const s = String(d.getSeconds()).padStart(2,'0');
+  return `${y}/${m}/${dd} ${h}:${min}:${s}`;
+}
   
 let running = false;
 async function updateEEW() {
@@ -235,121 +260,26 @@ async function updateEEW() {
     const res = await fetch("https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    const serial = data.issue.serial;
+    const serial = data[0]issue.serial;
 
     let eewMessage = "";
 
-    if (data.test) {
-      outputEl.textContent = "訓練報のため処理終了";
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth()+1).padStart(2,'0');
-      const d = String(now.getDate()).padStart(2,'0');
-      const h = String(now.getHours()).padStart(2,'0');
-      const min = String(now.getMinutes()).padStart(2,'0');
-      const s = String(now.getSeconds()).padStart(2,'0');
-      statusEl.textContent = `最終更新: ${y}/${m}/${d} ${h}:${min}:${s}`;
-      return;
+    if (data[0]test === true) {
+      eewMessage += "◆◆◆これは緊急地震速報の訓練報です。誤解される可能性のある再配信はご遠慮ください◆◆◆\n"
     }
     
-    if (data.isCancel) {
+    if (data[0]isCancel === true) {
       eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
     } else {
-      eewMessage += "【緊急地震速報（第${serial}報）】"
+      eewMessage += `【緊急地震速報（第${serial}報）】`;
     } 
-
-    const serialText = data.isFinal ? `# 第${data.Serial}(最終)報` : `# 第${data.Serial}報`;
-    document.body.style.background = data.isFinal ? "#ffffff" : "#f3cccb";
-    let plum = "";
-    if (data.isAssumption) {
-        if (!data.isWarn&&maxInt==="5弱") plum = "  /  レベル法";
-        else plum = "  /  PLUM法";
-    }
-    eewMessage += `\n${serialText}${plum}\n`;
-
-      outputEl.textContent = eewMessage;
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = String(now.getMonth()+1).padStart(2,'0');
-      const d = String(now.getDate()).padStart(2,'0');
-      const h = String(now.getHours()).padStart(2,'0');
-      const min = String(now.getMinutes()).padStart(2,'0');
-      const s = String(now.getSeconds()).padStart(2,'0');
-      statusEl.textContent = `最終更新: ${y}/${m}/${d} ${h}:${min}:${s}`;
-      return;
-    }
-
-    if (maxInt !== "不明" && maxInt !== "推定なし（深発）") {
-        maxInt = `震度${maxInt}`;
-    }
-    if (data.isAssumption) {
-      const hypocenter = data.Hypocenter ?? "震源地不明";
-      eewMessage += `
-${hypocenter} で揺れ
-推定最大震度【${maxInt}】
-`;
-    } else {
-      const hypocenter = data.Hypocenter ?? "震源地不明";
-      const magnitude = (data.Magunitude != null) ? Number(data.Magunitude).toFixed(1) : "不明";
-      const depth = data.Depth ?? "不明";
-      eewMessage += `
-${hypocenter} で地震
-推定最大震度【${maxInt}】
-M${magnitude}
-震源の深さ:${depth}km
-`;
-    }
-
-
-
-      if (data.isSea && data.Depth <= 60) {
-        if (data.isWarn || data.Magunitude >= 6.0) {
-      eewMessage += `\n【津波に注意】
-沿岸で長く強い揺れを感じた場合は、津波が襲来する可能性がありますので、念のため海や川から離れてください。
-今後の情報に注意してください。\n`;
-        }
-      }
-
-    const tz = "Asia/Tokyo";
-    const originStr = data.OriginTime
-      ? (() => {
-          const d = new Date(data.OriginTime);
-          const yyyy = d.getFullYear();
-          const MM = String(d.getMonth() + 1).padStart(2, '0');
-          const dd = String(d.getDate()).padStart(2, '0');
-          const HH = String(d.getHours()).padStart(2, '0');
-          const mm = String(d.getMinutes()).padStart(2, '0');
-          const ss = String(d.getSeconds()).padStart(2, '0');
-          return `${yyyy}/${MM}/${dd} ${HH}:${mm}:${ss}`;
-        })()
-      : "----/--/-- --:--:--";
-
-    let orgUnit = "頃発生";
-    if (data.isAssumption) orgUnit = "検知";
-    eewMessage += `\n${originStr} ${orgUnit}`;
-    eewMessage += `\n出典:WolfxAPI`;
 
     outputEl.textContent = eewMessage;
 
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = String(now.getMonth()+1).padStart(2,'0');
-    const d = String(now.getDate()).padStart(2,'0');
-    const h = String(now.getHours()).padStart(2,'0');
-    const min = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-
-    const announceDate = data.AnnouncedTime ? new Date(data.AnnouncedTime) : null;
-    const announceStr = announceDate
-      ? `${announceDate.getFullYear()}/` +
-        `${String(announceDate.getMonth()+1).padStart(2,'0')}/` +
-        `${String(announceDate.getDate()).padStart(2,'0')} ` +
-        `${String(announceDate.getHours()).padStart(2,'0')}:` +
-        `${String(announceDate.getMinutes()).padStart(2,'0')}:` +
-        `${String(announceDate.getSeconds()).padStart(2,'0')}`
-      : "----/--/-- --:--:--";
+    const now = nowTimeFormat();
+    const announceTime = announceTimeFormat(new Date(data[0]time));
     
-    statusEl.textContent = `最終更新: ${y}/${m}/${d} ${h}:${min}:${s}\n発表時刻: ${announceStr}`;
+    statusEl.textContent = `最終更新: ${now}\n発表時刻: ${announceTime}`;
     
   } catch(e) {
     outputEl.textContent = "取得エラー: " + e.message + (e.stack ? "\n" + e.stack : "");
