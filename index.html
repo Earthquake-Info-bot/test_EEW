@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.11]EEW(警報)ビューアー</title>
+<title>[v0.0.12]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -39,9 +39,7 @@ body {
 <button id="copyBtn">&nbsp;<br>　　本文をコピー　　<br>&nbsp;</button>
 <pre id="eew">読み込み中...</pre>
 
-<script>
-alert('JS復活');
-  
+<script>  
 // 地方 ⇔ 詳細地域 対応表（完全版）
 const regionMap = {
   "道央": ["石狩", "後志", "空知"],
@@ -242,14 +240,12 @@ function nowTimeFormat() {
 
 function announceTimeFormat(time) {
   if (!time) return "----/--/-- --:--:--";
-  const [datePart, timePart] = time.split(" ");
+  const str = String(time); // ←これ絶対必要
+  const [datePart, timePart] = str.split(" ");
   if (!datePart || !timePart) return "----/--/-- --:--:--";
-  const [y, m, d] = datePart.split("/").map(Number);
-  const [h, min, s] = timePart.split(":").map(Number);
-  if ([y, m, d, h, min, s].some(v => isNaN(v))) {
-    return "----/--/-- --:--:--";
-  }
-  return `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')} ${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  const [y, m, d] = datePart.split("/");
+  const [h, min, s] = timePart.split(":");
+  return `${y}/${m}/${d} ${h}:${min}:${s}`;
 }
   
 let running = false;
