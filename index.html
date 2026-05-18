@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.28]EEW(警報)ビューアー</title>
+<title>[v0.0.29]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -98,7 +98,7 @@ async function updateEEW() {
   running = true;
   try {
     //const url = "https://api.wolfx.jp/jma_eew.json";
-    const url = "https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1&offset=2";
+    const url = "https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1&offset=3";
     
     const res = await fetch (url)
     if (!res.ok) throw new Error("HTTP " + res.status);
