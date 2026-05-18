@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.10]EEW(警報)ビューアー</title>
+<title>[v0.0.11]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -242,15 +242,14 @@ function nowTimeFormat() {
 
 function announceTimeFormat(time) {
   if (!time) return "----/--/-- --:--:--";
-  const d = new Date(time);
-  if (isNaN(d.getTime())) return "----/--/-- --:--:--";
-  const y = d.getFullYear();
-  const m = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
-  const h = String(d.getHours()).padStart(2,'0');
-  const min = String(d.getMinutes()).padStart(2,'0');
-  const s = String(d.getSeconds()).padStart(2,'0');
-  return `${y}/${m}/${dd} ${h}:${min}:${s}`;
+  const [datePart, timePart] = time.split(" ");
+  if (!datePart || !timePart) return "----/--/-- --:--:--";
+  const [y, m, d] = datePart.split("/").map(Number);
+  const [h, min, s] = timePart.split(":").map(Number);
+  if ([y, m, d, h, min, s].some(v => isNaN(v))) {
+    return "----/--/-- --:--:--";
+  }
+  return `${y}/${String(m).padStart(2,'0')}/${String(d).padStart(2,'0')} ${String(h).padStart(2,'0')}:${String(min).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
   
 let running = false;
