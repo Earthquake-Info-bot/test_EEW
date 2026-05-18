@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.21]EEW(警報)ビューアー</title>
+<title>[v0.0.23]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -45,7 +45,7 @@ const statusEl = document.getElementById("status");
 const copyBtn = document.getElementById("copyBtn");
   
 // 地方 ⇔ 詳細地域 対応表（完全版）
-const regionMap = {
+const prefMap = {
   "道央": ["石狩", "後志", "空知"], "道南": ["渡島", "檜山", "奥尻島", "胆振", "日高"],
   "道北": ["上川", "留萌", "宗谷", "利尻礼文"], "道東": ["網走", "北見", "紋別", "十勝", "釧路", "根室"],
   "青森": ["青森"], "岩手": ["岩手"], "宮城": ["宮城"], "秋田": ["秋田"], "山形": ["山形"], "福島": ["福島"],
@@ -61,7 +61,7 @@ const regionMap = {
   "沖縄本島": ["沖縄本島", "久米島"], "大東島": ["大東島"], "宮古島": ["宮古島"], 
   "八重山": ["石垣島", "与那国島", "西表島"]
 };
-const chihoMap = {
+const regionMap = {
   "北海道": ["道北","道央","道南","道東"], "東北": ["青森","岩手","宮城","秋田","山形","福島"],
   "関東": ["茨城","栃木","群馬","埼玉","千葉","東京","神奈川"], "小笠原": ["小笠原"], "伊豆諸島": ["伊豆諸島"],
   "甲信": ["山梨","長野"], "北陸": ["富山","石川","福井"], "新潟": ["新潟","佐渡"],
@@ -114,16 +114,23 @@ async function updateEEW() {
     } else {
       eewMessage += `【緊急地震速報（第${serial}報）】`;
       eewMessage += `\n落ち着いて身の安全を確保\n\n＜強い揺れが予想される地域＞\n`;
-
-      const areas = [];
+      
+      const areaSet = new Set();
+      
       for (const area of data[0].areas) {
-        areas.push(area.name);
+        for (const [pref, keywords] of Object.entries(prefMap)) {
+          if (keywords.some(keyword => area.name.includes(keyword))) {
+            areaSet.add(pref);
+          }
+        }
       }
+      
+      const areaSetFilter = regionOrder.filter(pref => areaSet.has(pref));
 
-      eewMessage += areas.join("　");
+      eewMessage += areaSetFilter.join("　");
 
-      const hypocenter = data[0].earthquake.hypocenter.reduceName;
-      eewMessage += `\n\n◎${hypocenter}で地震、強い揺れに警戒。姿勢を低くして頭を守り、揺れがおさまるまで安全な場所で待つこと。`;
+      const hypocenter = data[0].earthquake?.hypocenter?.reduceName ?? "震源地不明";
+      eewMessage += `\n\n◎${hypocenter}で地震、強い揺れに警戒。姿勢を低くして頭を守ってください。落下物や倒れてくるものに注意してください。`;
     } 
 
     outputEl.textContent = eewMessage;
