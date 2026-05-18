@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.2]EEW(警報)ビューアー</title>
+<title>[v0.0.4]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -125,6 +125,23 @@ const chihoMap = {
   "八重山": ["八重山"]
 };
 
+const regionOrder1 = [
+  "北海道","道北","道央","道南","道東",
+  "東北","青森","岩手","宮城","秋田","山形","福島",
+  "関東","茨城","栃木","群馬","埼玉","千葉","東京","神奈川",
+  "小笠原",
+  "伊豆諸島","伊豆大島","新島","神津島","三宅島","八丈島",
+  "甲信","山梨","長野",
+  "新潟","佐渡",
+  "北陸","富山","石川","福井",
+  "東海","岐阜","静岡","愛知","三重",
+  "近畿","滋賀","京都","大阪","兵庫","奈良","和歌山",
+  "中国","鳥取","島根","岡山","広島","山口",
+  "四国","徳島","香川","愛媛","高知",
+  "九州","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島",
+  "沖縄","沖縄本島","奄美群島","大東島","宮古島","八重山",
+];
+  
 const AREA_ORDER = [
   "石狩地方北部","石狩地方中部","石狩地方南部",
   "後志地方北部","後志地方東部","後志地方西部",
@@ -218,6 +235,7 @@ async function updateEEW() {
     const res = await fetch("https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
+    const serial = data.issue.serial;
 
     let eewMessage = "";
 
@@ -235,84 +253,10 @@ async function updateEEW() {
     }
     
     if (data.isCancel) {
-      eewMessage += "【緊急地震速報（取消）】";
+      eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
     } else {
-      eewMessage += "【緊急地震速報（気象庁）】"
-    }
-    eewMessage += coloredTitle;
-
-    let alertHeader = "";
-    if (isWarn) {
-
-        // ▼ 一次区分 → 都道府県に変換
-        const prefSet = new Set();
-
-        for (const { Chiiki } of data.WarnArea) {
-          for (const [pref, areas] of Object.entries(regionMap)) {
-            if (areas.some(a => Chiiki.includes(a))) {
-              prefSet.add(pref);
-            }
-          }
-        }
-
-        // ▼ 2/3ルール判定後の表示用配列
-        const headerParts = [];
-
-        // ▼ chihoMapを使って地方ごとに判定
-        for (const [chiho, subareas] of Object.entries(chihoMap)) {
-
-            // 警報に含まれるsubarea数
-            const matchedCount = subareas.filter(pref => prefSet.has(pref)).length;
-
-            // 2/3以上なら地方名で表示
-            if (matchedCount / subareas.length >= 2/3) {
-                headerParts.push(chiho);
-            } else {
-                // 2/3未満なら含まれる地域だけ追加
-                subareas.forEach(pref => {
-                  if (prefSet.has(pref) && !headerParts.includes(pref)) {
-                    headerParts.push(pref);
-                  }
-                });
-            }
-        }
-
-        // ▼ 出力順の調整（任意。元コードの regionOrder に沿わせる場合）
-        const regionOrder1 = [
-          "北海道","道北","道央","道南","道東",
-          "東北","青森","岩手","宮城","秋田","山形","福島",
-          "関東","茨城","栃木","群馬","埼玉","千葉","東京","神奈川",
-          "小笠原",
-          "伊豆諸島","伊豆大島","新島","神津島","三宅島","八丈島",
-          "甲信","山梨","長野",
-          "新潟","佐渡",
-          "北陸","富山","石川","福井",
-          "東海","岐阜","静岡","愛知","三重",
-          "近畿","滋賀","京都","大阪","兵庫","奈良","和歌山",
-          "中国","鳥取","島根","岡山","広島","山口",
-          "四国","徳島","香川","愛媛","高知",
-          "九州","福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島",
-          "沖縄","沖縄本島","奄美群島","大東島","宮古島","八重山",
-        ];
-
-        const sortedHeaderParts = regionOrder1.filter(r => headerParts.includes(r))
-            // 2/3未満で入った個別地域を残す
-            .concat(headerParts.filter(r => !regionOrder1.includes(r)));
-
-        // ▼ [] 内文字列作成
-        const headerText = sortedHeaderParts.join(", ");
-
-        if (!data.isCancel) {
-          // ▼ 津波の有無で文言を分ける
-          if (data.isSea && data.Depth <= 60) {
-              alertHeader = `🚨強い揺れ警戒[${headerText}]姿勢を低くして、頭を守ってください。念のため津波に注意🚨`;
-          } else {
-              alertHeader = `🚨強い揺れ警戒[${headerText}]姿勢を低くして、頭を守ってください🚨`;
-          }
-        }
-    }
-
-    if (alertHeader) eewMessage += "\n" + alertHeader ;
+      eewMessage += "【緊急地震速報（第${serial}報）】"
+    } 
 
     const serialText = data.isFinal ? `# 第${data.Serial}(最終)報` : `# 第${data.Serial}報`;
     document.body.style.background = data.isFinal ? "#ffffff" : "#f3cccb";
@@ -322,16 +266,6 @@ async function updateEEW() {
         else plum = "  /  PLUM法";
     }
     eewMessage += `\n${serialText}${plum}\n`;
-
-    if (data.isCancel) {
-      const hypocenter = data.Hypocenter ?? "震源地不明";
-      const tz = "Asia/Tokyo";
-      const announceDate = data.AnnouncedTime ? new Date(data.AnnouncedTime) : null;
-      const announceStr = announceDate
-        ? `${String(announceDate.getDate()).padStart(2,'0')}日${String(announceDate.getHours()).padStart(2,'0')}:${String(announceDate.getMinutes()).padStart(2,'0')}:${String(announceDate.getSeconds()).padStart(2,'0')}`
-        : "発表時刻不明";
-
-      eewMessage += `\n＜キャンセル報＞\nこの緊急地震速報（${announceStr}発表）は取り消されました。`;
 
       outputEl.textContent = eewMessage;
       const now = new Date();
@@ -366,88 +300,7 @@ M${magnitude}
 `;
     }
 
-      if (data.WarnArea && data.WarnArea.length > 0) {
-        const int7  = []; const int6p = []; const int6m = [];
-        const int5p = []; const int5m = []; const int4  = [];
-        const int3  = []; const int2  = []; const int1  = [];
-        const int0  = []; // 震度不明・その他
 
-        // ▼ 対象地域（詳細）：元データ順 + 予想震度
-        for (const area of data.WarnArea) {
-          const shindo = area.Shindo1;
-
-          switch (shindo) {
-            case "7": int7.push(area.Chiiki); break;
-            case "6強": case "6+": int6p.push(area.Chiiki); break;
-            case "6弱": case "6-": int6m.push(area.Chiiki); break;
-            case "5強": case "5+": int5p.push(area.Chiiki); break;
-            case "5弱": case "5-": int5m.push(area.Chiiki); break;
-            case "4": int4.push(area.Chiiki); break;
-            case "3": int3.push(area.Chiiki); break;
-            case "2": int2.push(area.Chiiki); break;
-            case "1": int1.push(area.Chiiki); break;
-            default: int0.push(area.Chiiki);
-          }
-        }
-
-        // ▼ ここで地域順ソート
-        int7 .sort(sortByAreaOrder);
-        int6p.sort(sortByAreaOrder);
-        int6m.sort(sortByAreaOrder);
-        int5p.sort(sortByAreaOrder);
-        int5m.sort(sortByAreaOrder);
-        int4 .sort(sortByAreaOrder);
-        int3 .sort(sortByAreaOrder);
-        int2 .sort(sortByAreaOrder);
-        int1 .sort(sortByAreaOrder);
-        int0 .sort(sortByAreaOrder);
-
-        let esi = "";
-        if (int7.length || int6p.length || int6m.length) esi += "⚠️以下の地域は激しい揺れ警戒\n";
-        if (int7.length)  esi += "◆推定震度7◆\n　" + int7.join("\n　") + "\n";
-        if (int6p.length) esi += "◆推定震度6強◆\n　" + int6p.join("\n　") + "\n";
-        if (int6m.length) esi += "◆推定震度6弱◆\n　" + int6m.join("\n　") + "\n";
-        if (int5p.length || int5m.length) esi += "⚠️以下の地域は強い揺れ警戒\n";
-        if (int5p.length) esi += "◆推定震度5強◆\n　" + int5p.join("\n　") + "\n";
-        if (int5m.length) esi += "◆推定震度5弱◆\n　" + int5m.join("\n　") + "\n";
-        if (int4.length)  esi += "⚠️以下の地域は揺れに注意\n";
-        if (int4.length)  esi += "◆推定震度4◆\n　" + int4.join("\n　") + "\n";
-        if (int3.length)  esi += "◆推定震度3◆\n　" + int3.join("\n　") + "\n";
-        if (int2.length)  esi += "◆推定震度2◆\n　" + int2.join("\n　") + "\n";
-        if (int1.length)  esi += "◆推定震度1◆\n　" + int1.join("\n　") + "\n";
-        if (int0.length)  esi += "◆推定震度不明◆\n　" + int0.join("\n　") + "\n";
-      
-        // ▼ 対象地域（地方）抽出
-        const regionSet = new Set();
-      
-        for (const { Chiiki } of data.WarnArea) {
-          for (const [region, areas] of Object.entries(regionMap)) {
-            if (areas.some(area => Chiiki.includes(area))) {
-              regionSet.add(region);
-            }
-          }
-        }
-      
-        // ▼ 地方の表示順（固定）
-        const regionOrder2 = [
-          "道北","道央","道南","道東",
-          "青森","岩手","宮城","秋田","山形","福島",
-          "茨城","栃木","群馬","埼玉","千葉","東京","伊豆諸島","小笠原","神奈川",
-          "新潟","富山","石川","福井","山梨","長野",
-          "岐阜","静岡","愛知","三重",
-          "滋賀","京都","大阪","兵庫","奈良","和歌山",
-          "鳥取","島根","岡山","広島","山口",
-          "徳島","香川","愛媛","高知",
-          "福岡","佐賀","長崎","熊本","大分","宮崎","鹿児島",
-          "奄美群島","沖縄本島","大東島","宮古島","八重山"
-        ];
-      
-        const sortedRegions = regionOrder2.filter(r => regionSet.has(r));
-      
-        // ▼ 出力
-        eewMessage += `\n【対象地域(広域)】\n${sortedRegions.join("、")}`;
-        eewMessage += `\n\n【地域ごとの推定震度】\n${esi}`;
-      }
 
       if (data.isSea && data.Depth <= 60) {
         if (data.isWarn || data.Magunitude >= 6.0) {
