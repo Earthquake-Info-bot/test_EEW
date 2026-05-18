@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v0.0.7]EEW(警報)ビューアー</title>
+<title>[v0.0.8]EEW(警報)ビューアー</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -260,11 +260,11 @@ async function updateEEW() {
     const res = await fetch("https://api-v2-sandbox.p2pquake.net/v2/history?codes=556&limit=1");
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    const serial = data[0]issue.serial;
+    const serial = data[0].issue.serial;
 
     let eewMessage = "";
 
-    if (data[0]test === true) {
+    if (data[0].test === true) {
       eewMessage += "◆◆◆これは緊急地震速報の訓練報です。誤解される可能性のある再配信はご遠慮ください◆◆◆\n"
     }
     
@@ -277,7 +277,7 @@ async function updateEEW() {
     outputEl.textContent = eewMessage;
 
     const now = nowTimeFormat();
-    const announceTime = announceTimeFormat(new Date(data[0]time));
+    const announceTime = announceTimeFormat(new Date(data[0].time));
     
     statusEl.textContent = `最終更新: ${now}\n発表時刻: ${announceTime}`;
     
