@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>[v1.1.29]EEW(警報)ビューアー</title>
+<title>EEW(警報)ビューアー v1.1.30</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -114,7 +114,7 @@ async function updateEEW() {
     if (data[0].cancelled === true) {
       eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
     } else {
-      eewMessage += `🚨緊急地震速報（第${serial}報）`;
+      eewMessage += `🚨緊急地震速報（警報第${serial}報）`;
       eewMessage += `\n落ち着いて身の安全を確保\n\n⚠️強い揺れが予想される地域\n`;
       
       const areaSet = new Set();
