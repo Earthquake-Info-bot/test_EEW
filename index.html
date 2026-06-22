@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EEW(警報)ビューアー v1.1.30</title>
+<title>EEW(警報)ビューアー v1.2.1</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -103,44 +103,58 @@ async function updateEEW() {
     const res = await fetch (url)
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    const serial = data[0].issue.serial;
-
-    let eewMessage = "";
-
-    if (data[0].test === true) {
-      eewMessage += "◆◆◆これは緊急地震速報の訓練報です。誤解される可能性のある再配信はご遠慮ください◆◆◆\n"
-    }
-    
-    if (data[0].cancelled === true) {
-      eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
+    if (!data[0]) {
+      eewMessage = "現在緊急地震速報は発表されていません。";
     } else {
-      eewMessage += `🚨緊急地震速報（警報第${serial}報）`;
-      eewMessage += `\n落ち着いて身の安全を確保\n\n⚠️強い揺れが予想される地域\n`;
-      
-      const areaSet = new Set();
-      
-      for (const area of data[0].areas) {
-        for (const [pref, keywords] of Object.entries(prefMap)) {
-          if (keywords.some(keyword => area.name.includes(keyword))) {
-            areaSet.add(pref);
-          }
-        }
+      const serial = data[0].issue.serial;
+  
+      let eewMessage = "";
+  
+      if (data[0].test === true) {
+        eewMessage += "◆◆◆これは緊急地震速報の訓練報です。誤解される可能性のある再配信はご遠慮ください◆◆◆\n"
       }
       
-      const areaSetFilter = regionOrder.filter(pref => areaSet.has(pref));
-
-      eewMessage += areaSetFilter.join("　");
-
-      const hypocenter = data[0].earthquake?.hypocenter?.reduceName ?? "震源地不明";
-      eewMessage += `\n\n◎${hypocenter}で地震、強い揺れに警戒。姿勢を低くして頭を守ってください。落下物や倒れてくるものに注意してください。`;
-    } 
+      if (data[0].cancelled === true) {
+        eewMessage += "【緊急地震速報（取消）】\n＜キャンセル報＞\nこの緊急地震速報は取り消されました。強い揺れの心配はありません。";
+      } else {
+        eewMessage += `🚨緊急地震速報（警報第${serial}報）`;
+        eewMessage += `\n落ち着いて身の安全を確保\n\n⚠️強い揺れが予想される地域\n`;
+        
+        const areaSet = new Set();
+        
+        for (const area of data[0].areas) {
+          for (const [pref, keywords] of Object.entries(prefMap)) {
+            if (keywords.some(keyword => area.name.includes(keyword))) {
+              areaSet.add(pref);
+            }
+          }
+        }
+        
+        const areaSetFilter = regionOrder.filter(pref => areaSet.has(pref));
+  
+        eewMessage += areaSetFilter.join("　");
+  
+        const hypocenter = data[0].earthquake?.hypocenter?.reduceName ?? "震源地不明";
+        eewMessage += `\n\n◎${hypocenter}で地震、強い揺れに警戒。姿勢を低くして頭を守ってください。落下物や倒れてくるものに注意してください。`;
+      } 
+    }
 
     outputEl.textContent = eewMessage;
-
+    
     const now = nowTimeFormat();
     const announceTime = data[0].time;
     
-    statusEl.textContent = `最終更新: ${now}\n発表時刻: ${announceTime}`;
+    // 発表からの経過時間を計算
+    const announceDate = new Date(announceTime);
+    const elapsedSec = Math.floor((Date.now() - announceDate.getTime()) / 1000);
+    
+    const mins = Math.floor(elapsedSec / 60);
+    const secs = elapsedSec % 60;
+    
+    statusEl.textContent =
+      `最終更新: ${now}\n` +
+      `発表時刻: ${announceTime}\n` +
+      `発表から: ${mins}分${secs}秒経過`;
     
   } catch(e) {
     outputEl.textContent = "取得エラー: " + e.message + (e.stack ? "\n" + e.stack : "");
