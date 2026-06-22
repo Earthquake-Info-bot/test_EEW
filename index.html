@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EEW(警報)ビューアー v1.2.1</title>
+<title>EEW(警報)ビューアー v1.2.2</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -103,12 +103,12 @@ async function updateEEW() {
     const res = await fetch (url)
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
+    let eewMessage = "";
+    
     if (!data[0]) {
       eewMessage = "現在緊急地震速報は発表されていません。";
     } else {
       const serial = data[0].issue.serial;
-  
-      let eewMessage = "";
   
       if (data[0].test === true) {
         eewMessage += "◆◆◆これは緊急地震速報の訓練報です。誤解される可能性のある再配信はご遠慮ください◆◆◆\n"
