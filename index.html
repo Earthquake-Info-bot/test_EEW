@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>EEW(警報)ビューアー v1.2.2</title>
+<title>EEW(警報)ビューアー v1.2.3</title>
 <style>
 body {
   font-family:"Yu Gothic","YuGothic","メイリオ",sans-serif;
@@ -140,12 +140,14 @@ async function updateEEW() {
     }
 
     outputEl.textContent = eewMessage;
-    
+        
     const now = nowTimeFormat();
     const announceTime = data[0].time;
     
-    // 発表からの経過時間を計算
-    const announceDate = new Date(announceTime);
+    const announceDate = new Date(
+      announceTime.replace(/\//g, "-").replace(" ", "T")
+    );
+    
     const elapsedSec = Math.floor((Date.now() - announceDate.getTime()) / 1000);
     
     const mins = Math.floor(elapsedSec / 60);
